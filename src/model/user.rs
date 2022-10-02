@@ -34,49 +34,73 @@ pub struct SignIn {
     pub password: String,
 }
 
+// NOTE: Domain
 impl User {
-    pub async fn sign_up(conn: &PgPool, input: SignUp) -> anyhow::Result<Tokens> {
-        input.validate()?;
-
+    pub fn create(name: String, password: String) -> (Self, Tokens) {
         let id = get_new_id();
         let tokens = generate_tokens(Auth::new(id.clone()));
         let now = get_current_date_time();
         let user = User::new(
             id,
-            input.name,
-            hash(&input.password),
+            name,
+            hash(&password),
             Some(hash(&tokens.refresh_token)),
             now,
             now,
         );
+        (user, tokens)
+    }
 
-        user.upsert(conn).await.map(|_| tokens)
+    pub fn verify_password(&self, password: String) -> anyhow::Result<()> {
+        verify(&password, &self.password_hash)
+    }
+
+    pub fn verify_refresh_token(&self, refresh_token: String) -> anyhow::Result<()> {
+        let refresh_token_hash = self
+            .refresh_token_hash
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("refresh_token_hash has already been empty"))?;
+        verify(&refresh_token, refresh_token_hash)
+    }
+
+    pub fn refresh_tokens(&mut self) -> Tokens {
+        let tokens = generate_tokens(Auth::new(self.id.clone()));
+        self.refresh_token_hash = Some(hash(&tokens.refresh_token));
+        self.updated_at = get_current_date_time();
+        tokens
+    }
+
+    pub fn unset_tokens(&mut self) {
+        self.refresh_token_hash = None;
+        self.updated_at = get_current_date_time();
+    }
+}
+
+// NOTE: Commands
+impl User {
+    pub async fn sign_up(conn: &PgPool, input: SignUp) -> anyhow::Result<Tokens> {
+        input.validate()?;
+        let (user, tokens) = User::create(input.name, input.password);
+        user.upsert(conn).await?;
+        Ok(tokens)
     }
 
     pub async fn sign_in(conn: &PgPool, input: SignIn) -> anyhow::Result<Tokens> {
         let mut user = User::find_by_name(conn, input.name).await?;
-
-        verify(&input.password, &user.password_hash)?;
-
-        let tokens = generate_tokens(Auth::new(user.id.clone()));
-
-        user.refresh_token_hash = Some(hash(&tokens.refresh_token));
-        user.updated_at = get_current_date_time();
-
-        user.upsert(conn).await.map(|_| tokens)
+        user.verify_password(input.password)?;
+        let tokens = user.refresh_tokens();
+        user.upsert(conn).await?;
+        Ok(tokens)
     }
 
     pub async fn sign_out(conn: &PgPool, auth: Auth) -> anyhow::Result<()> {
         let mut user = User::find_by_id(conn, auth.sub).await?;
-
-        user.refresh_token_hash = None;
-        user.updated_at = get_current_date_time();
-
+        user.unset_tokens();
         user.upsert(conn).await
     }
 }
 
-// NOTE: sql for commands
+// NOTE: SQL for Commands
 impl User {
     pub async fn find_by_id(conn: &PgPool, id: String) -> anyhow::Result<User> {
         query_as!(
