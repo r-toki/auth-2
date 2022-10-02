@@ -66,6 +66,32 @@ impl User {
         user.upsert(conn).await.map(|_| tokens)
     }
 
+    pub async fn sign_out(conn: &PgPool, auth: Auth) -> anyhow::Result<()> {
+        let mut user = User::find_by_id(conn, auth.sub).await?;
+
+        user.refresh_token_hash = None;
+        user.updated_at = get_current_date_time();
+
+        user.upsert(conn).await
+    }
+}
+
+// NOTE: sql for commands
+impl User {
+    pub async fn find_by_id(conn: &PgPool, id: String) -> anyhow::Result<User> {
+        query_as!(
+            User,
+            r#"
+select * from users
+where id = $1
+            "#,
+            id
+        )
+        .fetch_one(conn)
+        .await
+        .map_err(Into::into)
+    }
+
     pub async fn find_by_name(conn: &PgPool, name: String) -> anyhow::Result<User> {
         query_as!(
             User,
