@@ -1,0 +1,18 @@
+{
+  "db": "PostgreSQL",
+  "acb1c1773277235593fa6c605f91e1f585faa52b0f91813e1e8e081c442afd66": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Text",
+          "Text"
+        ]
+      }
+    },
+    "query": "\ninsert into users (id, name, password_hash, refresh_token_hash, created_at, updated_at)\nvalues ($1, $2, $3, $4, current_timestamp, current_timestamp)\n            "
+  }
+}

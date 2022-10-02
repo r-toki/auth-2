@@ -1,9 +1,11 @@
+use crate::model::user::{CreateUser, User};
 use actix_web::{
+    error::ErrorInternalServerError,
     post,
-    web::{Json, ServiceConfig},
-    Responder,
+    web::{Data, Json, ServiceConfig},
 };
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use sqlx::PgPool;
 
 pub fn init(cfg: &mut ServiceConfig) {
     cfg.service(create);
@@ -16,6 +18,12 @@ struct Create {
 }
 
 #[post("/users")]
-async fn create(form: Json<Create>) -> impl Responder {
-    Json(())
+async fn create(conn: Data<PgPool>, form: Json<Create>) -> actix_web::Result<Json<()>> {
+    User::create(
+        &conn,
+        CreateUser::new(form.name.to_owned(), form.password.to_owned()),
+    )
+    .await
+    .map(Json)
+    .map_err(ErrorInternalServerError)
 }

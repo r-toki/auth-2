@@ -3,16 +3,20 @@ mod lib;
 mod model;
 
 use crate::lib::{config::CONFIG, cors::cors};
-use actix_web::{get, middleware::Logger, App, HttpServer, Responder};
+use actix_web::{get, middleware::Logger, web, App, HttpServer, Responder};
 use dotenv::dotenv;
+use sqlx::PgPool;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
     env_logger::init_from_env(env_logger::Env::default().default_filter_or("info"));
 
-    HttpServer::new(|| {
+    let conn = PgPool::connect(&CONFIG.database_url).await.unwrap();
+
+    HttpServer::new(move || {
         App::new()
+            .app_data(web::Data::new(conn.clone()))
             .wrap(Logger::default())
             .wrap(cors())
             .configure(controller::init)
