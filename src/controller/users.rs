@@ -1,9 +1,6 @@
-use crate::model::{
-    lib::jwt::Tokens,
-    user::{SignIn, SignUp, User},
-};
+use super::lib::error::Result;
+use crate::model::{lib::jwt::Tokens, user::User};
 use actix_web::{
-    error::ErrorInternalServerError,
     post,
     web::{Data, Json, ServiceConfig},
 };
@@ -22,14 +19,10 @@ struct Create {
 }
 
 #[post("/users")]
-async fn create(conn: Data<PgPool>, form: Json<Create>) -> actix_web::Result<Json<Tokens>> {
-    User::sign_up(
-        &conn,
-        SignUp::new(form.name.to_owned(), form.password.to_owned()),
-    )
-    .await
-    .map(Json)
-    .map_err(ErrorInternalServerError)
+async fn create(conn: Data<PgPool>, form: Json<Create>) -> Result<Json<Tokens>> {
+    let (user, tokens) = User::create(form.name.clone(), form.password.clone())?;
+    user.upsert(&conn).await?;
+    Ok(Json(tokens))
 }
 
 #[derive(Debug, Deserialize)]
@@ -39,15 +32,10 @@ struct CreateSessions {
 }
 
 #[post("/users/sessions")]
-async fn create_sessions(
-    conn: Data<PgPool>,
-    form: Json<CreateSessions>,
-) -> actix_web::Result<Json<Tokens>> {
-    User::sign_in(
-        &conn,
-        SignIn::new(form.name.to_owned(), form.password.to_owned()),
-    )
-    .await
-    .map(Json)
-    .map_err(ErrorInternalServerError)
+async fn create_sessions(conn: Data<PgPool>, form: Json<CreateSessions>) -> Result<Json<Tokens>> {
+    let mut user = User::find_by_name(&conn, form.name.clone()).await?;
+    user.verify_password(form.password.clone())?;
+    let tokens = user.refresh_tokens();
+    user.upsert(&conn).await?;
+    Ok(Json(tokens))
 }

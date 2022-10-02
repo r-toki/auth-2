@@ -21,25 +21,22 @@ pub struct User {
 }
 
 #[derive(new, Debug, Validate)]
-pub struct SignUp {
+pub struct Create {
     #[validate(length(min = 3, max = 15))]
     pub name: String,
     #[validate(regex = "PASSWORD_REGEX")]
     pub password: String,
 }
 
-#[derive(new, Debug)]
-pub struct SignIn {
-    pub name: String,
-    pub password: String,
-}
-
 // NOTE: Domain
 impl User {
-    pub fn create(name: String, password: String) -> (Self, Tokens) {
+    pub fn create(name: String, password: String) -> anyhow::Result<(Self, Tokens)> {
+        Create::new(name.clone(), password.clone()).validate()?;
+
         let id = get_new_id();
         let tokens = generate_tokens(Auth::new(id.clone()));
         let now = get_current_date_time();
+
         let user = User::new(
             id,
             name,
@@ -48,7 +45,8 @@ impl User {
             now,
             now,
         );
-        (user, tokens)
+
+        Ok((user, tokens))
     }
 
     pub fn verify_password(&self, password: String) -> anyhow::Result<()> {
@@ -59,7 +57,7 @@ impl User {
         let refresh_token_hash = self
             .refresh_token_hash
             .as_ref()
-            .ok_or_else(|| anyhow::anyhow!("refresh_token_hash has already been empty"))?;
+            .ok_or_else(|| anyhow::anyhow!("refresh_token_hash must not be empty"))?;
         verify(&refresh_token, refresh_token_hash)
     }
 
@@ -73,30 +71,6 @@ impl User {
     pub fn unset_tokens(&mut self) {
         self.refresh_token_hash = None;
         self.updated_at = get_current_date_time();
-    }
-}
-
-// NOTE: Commands
-impl User {
-    pub async fn sign_up(conn: &PgPool, input: SignUp) -> anyhow::Result<Tokens> {
-        input.validate()?;
-        let (user, tokens) = User::create(input.name, input.password);
-        user.upsert(conn).await?;
-        Ok(tokens)
-    }
-
-    pub async fn sign_in(conn: &PgPool, input: SignIn) -> anyhow::Result<Tokens> {
-        let mut user = User::find_by_name(conn, input.name).await?;
-        user.verify_password(input.password)?;
-        let tokens = user.refresh_tokens();
-        user.upsert(conn).await?;
-        Ok(tokens)
-    }
-
-    pub async fn sign_out(conn: &PgPool, auth: Auth) -> anyhow::Result<()> {
-        let mut user = User::find_by_id(conn, auth.sub).await?;
-        user.unset_tokens();
-        user.upsert(conn).await
     }
 }
 
