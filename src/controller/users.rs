@@ -19,9 +19,9 @@ struct Create {
 }
 
 #[post("/users")]
-async fn create(conn: Data<PgPool>, form: Json<Create>) -> Result<Json<Tokens>> {
+async fn create(pool: Data<PgPool>, form: Json<Create>) -> Result<Json<Tokens>> {
     let (user, tokens) = User::create(form.name.clone(), form.password.clone())?;
-    user.upsert(&conn).await?;
+    user.upsert(&**pool).await?;
     Ok(Json(tokens))
 }
 
@@ -32,10 +32,10 @@ struct CreateSessions {
 }
 
 #[post("/users/sessions")]
-async fn create_sessions(conn: Data<PgPool>, form: Json<CreateSessions>) -> Result<Json<Tokens>> {
-    let mut user = User::find_by_name(&conn, form.name.clone()).await?;
+async fn create_sessions(pool: Data<PgPool>, form: Json<CreateSessions>) -> Result<Json<Tokens>> {
+    let mut user = User::find_by_name(&**pool, form.name.clone()).await?;
     user.verify_password(form.password.clone())?;
     let tokens = user.refresh_tokens();
-    user.upsert(&conn).await?;
+    user.upsert(&**pool).await?;
     Ok(Json(tokens))
 }

@@ -7,7 +7,7 @@ use super::lib::{
 use chrono::{DateTime, Utc};
 use derive_new::new;
 use serde::{Deserialize, Serialize};
-use sqlx::{query, query_as, PgPool};
+use sqlx::{query, query_as, PgExecutor, PgPool};
 use validator::Validate;
 
 #[derive(new, Debug, Serialize, Deserialize)]
@@ -76,7 +76,7 @@ impl User {
 
 // NOTE: SQL for Commands
 impl User {
-    pub async fn find_by_id(conn: &PgPool, id: String) -> anyhow::Result<User> {
+    pub async fn find_by_id(executor: impl PgExecutor<'_>, id: String) -> anyhow::Result<User> {
         query_as!(
             User,
             r#"
@@ -85,12 +85,12 @@ where id = $1
             "#,
             id
         )
-        .fetch_one(conn)
+        .fetch_one(executor)
         .await
         .map_err(Into::into)
     }
 
-    pub async fn find_by_name(conn: &PgPool, name: String) -> anyhow::Result<User> {
+    pub async fn find_by_name(executor: impl PgExecutor<'_>, name: String) -> anyhow::Result<User> {
         query_as!(
             User,
             r#"
@@ -99,12 +99,12 @@ where name = $1
         "#,
             name
         )
-        .fetch_one(conn)
+        .fetch_one(executor)
         .await
         .map_err(Into::into)
     }
 
-    pub async fn upsert(&self, conn: &PgPool) -> anyhow::Result<()> {
+    pub async fn upsert(&self, executor: impl PgExecutor<'_>) -> anyhow::Result<()> {
         query!(
             r#"
 insert into users (id, name, password_hash, refresh_token_hash, created_at, updated_at)
@@ -120,7 +120,7 @@ set name = $2, password_hash = $3, refresh_token_hash = $4, created_at = $5, upd
             self.created_at,
             self.updated_at
         )
-        .execute(conn)
+        .execute(executor)
         .await
         .map(|_| ())
         .map_err(Into::into)
