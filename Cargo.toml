@@ -1,5 +1,5 @@
 [package]
-name = "auth-2"
+name = "auth-2-backend"
 version = "0.1.0"
 edition = "2021"
 

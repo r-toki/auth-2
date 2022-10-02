@@ -1,6 +1,6 @@
 use crate::model::{
     lib::jwt::Tokens,
-    user::{CreateUser, User},
+    user::{SignIn, SignUp, User},
 };
 use actix_web::{
     error::ErrorInternalServerError,
@@ -12,6 +12,7 @@ use sqlx::PgPool;
 
 pub fn init(cfg: &mut ServiceConfig) {
     cfg.service(create);
+    cfg.service(create_sessions);
 }
 
 #[derive(Debug, Deserialize)]
@@ -24,7 +25,27 @@ struct Create {
 async fn create(conn: Data<PgPool>, form: Json<Create>) -> actix_web::Result<Json<Tokens>> {
     User::sign_up(
         &conn,
-        CreateUser::new(form.name.to_owned(), form.password.to_owned()),
+        SignUp::new(form.name.to_owned(), form.password.to_owned()),
+    )
+    .await
+    .map(Json)
+    .map_err(ErrorInternalServerError)
+}
+
+#[derive(Debug, Deserialize)]
+struct CreateSessions {
+    name: String,
+    password: String,
+}
+
+#[post("/users/sessions")]
+async fn create_sessions(
+    conn: Data<PgPool>,
+    form: Json<CreateSessions>,
+) -> actix_web::Result<Json<Tokens>> {
+    User::sign_in(
+        &conn,
+        SignIn::new(form.name.to_owned(), form.password.to_owned()),
     )
     .await
     .map(Json)
