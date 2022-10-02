@@ -1,4 +1,7 @@
-use crate::model::user::{CreateUser, User};
+use crate::model::{
+    lib::jwt::Tokens,
+    user::{CreateUser, User},
+};
 use actix_web::{
     error::ErrorInternalServerError,
     post,
@@ -18,8 +21,8 @@ struct Create {
 }
 
 #[post("/users")]
-async fn create(conn: Data<PgPool>, form: Json<Create>) -> actix_web::Result<Json<()>> {
-    User::create(
+async fn create(conn: Data<PgPool>, form: Json<Create>) -> actix_web::Result<Json<Tokens>> {
+    User::sign_up(
         &conn,
         CreateUser::new(form.name.to_owned(), form.password.to_owned()),
     )
