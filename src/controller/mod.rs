@@ -1,6 +1,6 @@
-pub mod lib;
-pub mod user;
-pub mod users;
+mod lib;
+mod user;
+mod users;
 
 use actix_web::web::ServiceConfig;
 

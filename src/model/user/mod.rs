@@ -1,13 +1,13 @@
-use super::lib::{
-    date_time::get_current_date_time,
-    id::get_new_id,
+mod repository;
+
+use super::lib::{date_time::get_current_date_time, id::get_new_id, password::PASSWORD_REGEX};
+use crate::lib::{
     jwt::{generate_tokens, Auth, Tokens},
-    password::{hash, verify, PASSWORD_REGEX},
+    password_hashing::{hash, verify},
 };
 use chrono::{DateTime, Utc};
 use derive_new::new;
 use serde::{Deserialize, Serialize};
-use sqlx::{query, query_as, PgExecutor, PgPool};
 use validator::Validate;
 
 #[derive(new, Debug, Serialize, Deserialize)]
@@ -28,7 +28,6 @@ pub struct Create {
     pub password: String,
 }
 
-// NOTE: Domain
 impl User {
     pub fn create(name: String, password: String) -> anyhow::Result<(Self, Tokens)> {
         Create::new(name.clone(), password.clone()).validate()?;
@@ -58,71 +57,21 @@ impl User {
             .refresh_token_hash
             .as_ref()
             .ok_or_else(|| anyhow::anyhow!("refresh_token_hash must not be empty"))?;
+
         verify(&refresh_token, refresh_token_hash)
     }
 
     pub fn refresh_tokens(&mut self) -> Tokens {
         let tokens = generate_tokens(Auth::new(self.id.clone()));
+
         self.refresh_token_hash = Some(hash(&tokens.refresh_token));
         self.updated_at = get_current_date_time();
+
         tokens
     }
 
     pub fn unset_tokens(&mut self) {
         self.refresh_token_hash = None;
         self.updated_at = get_current_date_time();
-    }
-}
-
-// NOTE: SQL for Commands
-impl User {
-    pub async fn find_by_id(executor: impl PgExecutor<'_>, id: String) -> anyhow::Result<User> {
-        query_as!(
-            User,
-            r#"
-select * from users
-where id = $1
-            "#,
-            id
-        )
-        .fetch_one(executor)
-        .await
-        .map_err(Into::into)
-    }
-
-    pub async fn find_by_name(executor: impl PgExecutor<'_>, name: String) -> anyhow::Result<User> {
-        query_as!(
-            User,
-            r#"
-select * from users
-where name = $1
-        "#,
-            name
-        )
-        .fetch_one(executor)
-        .await
-        .map_err(Into::into)
-    }
-
-    pub async fn upsert(&self, executor: impl PgExecutor<'_>) -> anyhow::Result<()> {
-        query!(
-            r#"
-insert into users (id, name, password_hash, refresh_token_hash, created_at, updated_at)
-values ($1, $2, $3, $4, $5, $6)
-on conflict (id)
-do update
-set name = $2, password_hash = $3, refresh_token_hash = $4, created_at = $5, updated_at = $6
-            "#,
-            self.id,
-            self.name,
-            self.password_hash,
-            self.refresh_token_hash,
-            self.created_at,
-            self.updated_at
-        )
-        .execute(executor)
-        .await
-        .map(|_| ())
-        .map_err(Into::into)
     }
 }
