@@ -1,4 +1,5 @@
 use super::User;
+
 use sqlx::{query, query_as, PgExecutor};
 
 impl User {

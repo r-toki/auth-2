@@ -1,6 +1,7 @@
 use super::lib::error::Result;
 use crate::lib::jwt::Tokens;
 use crate::model::user::User;
+
 use actix_web::{
     post,
     web::{Data, Json, ServiceConfig},

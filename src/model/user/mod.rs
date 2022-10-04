@@ -1,10 +1,14 @@
+mod query;
 mod repository;
+
+pub use query::UserDto;
 
 use super::lib::{date_time::get_current_date_time, id::get_new_id};
 use crate::lib::{
     jwt::{generate_tokens, Auth, Tokens},
     password_hashing::{hash, verify},
 };
+
 use chrono::{DateTime, Utc};
 use derive_new::new;
 use lazy_static::lazy_static;

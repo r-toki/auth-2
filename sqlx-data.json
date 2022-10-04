@@ -50,6 +50,44 @@
     },
     "query": "\nselect * from users\nwhere id = $1\n            "
   },
+  "a621ab4bfb89543a807c27524f7dbd6b3247ab399f78975afb6d7308d3e38632": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "name",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 2,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 3,
+          "type_info": "Timestamptz"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "\nselect id, name, created_at, updated_at from users\nwhere id = $1\n            "
+  },
   "db13bcbf409269cd74d8c740eb8e4b1bfeb96733186bc36c4f150b0bfa7a98c7": {
     "describe": {
       "columns": [

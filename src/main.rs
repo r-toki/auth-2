@@ -3,6 +3,7 @@ mod lib;
 mod model;
 
 use crate::lib::{config::CONFIG, cors::cors};
+
 use actix_web::{get, middleware::Logger, web, App, HttpServer, Responder};
 use dotenv::dotenv;
 use sqlx::PgPool;
