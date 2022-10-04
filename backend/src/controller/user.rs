@@ -18,6 +18,6 @@ async fn index(
     access_token_decoded: AccessTokenDecoded,
 ) -> Result<Json<UserDto>> {
     let auth: Auth = access_token_decoded.into();
-    let me = User::find_user(&**pool, auth.sub).await?;
+    let me = User::find_user(&**pool, auth.user_id).await?;
     Ok(Json(me))
 }

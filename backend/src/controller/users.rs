@@ -55,7 +55,7 @@ async fn update_sessions(
     refresh_token_decoded: RefreshTokenDecoded,
 ) -> Result<Json<Tokens>> {
     let auth: Auth = refresh_token_decoded.into();
-    let mut user = User::find_by_id(&**pool, auth.sub).await?;
+    let mut user = User::find_by_id(&**pool, auth.user_id).await?;
     user.verify_refresh_token(token.into())?;
     let tokens = user.issue_tokens();
     user.upsert(&**pool).await?;
@@ -68,7 +68,7 @@ async fn delete_sessions(
     access_token_decoded: AccessTokenDecoded,
 ) -> Result<Json<()>> {
     let auth: Auth = access_token_decoded.into();
-    let mut user = User::find_by_id(&**pool, auth.sub).await?;
+    let mut user = User::find_by_id(&**pool, auth.user_id).await?;
     user.revoke_tokens();
     user.upsert(&**pool).await?;
     Ok(Json(()))

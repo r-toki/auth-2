@@ -7,13 +7,14 @@ use serde::{Deserialize, Serialize};
 
 #[derive(new, Debug)]
 pub struct Auth {
-    pub sub: String,
+    pub user_id: String,
 }
 
 #[derive(new, Debug, Serialize, Deserialize)]
 pub struct Claims {
     pub sub: String,
     pub exp: i64,
+    pub user_id: String,
 }
 
 #[derive(new, Debug, Serialize)]
@@ -25,7 +26,7 @@ pub struct Tokens {
 
 pub fn generate_tokens(auth: Auth) -> Tokens {
     let access_exp = (Utc::now() + Duration::minutes(30)).timestamp();
-    let access_claims = Claims::new(auth.sub.clone(), access_exp);
+    let access_claims = Claims::new(auth.user_id.clone(), access_exp, auth.user_id.clone());
     let access_token = encode(
         &Header::default(),
         &access_claims,
@@ -34,7 +35,7 @@ pub fn generate_tokens(auth: Auth) -> Tokens {
     .unwrap();
 
     let refresh_exp = (Utc::now() + Duration::weeks(2)).timestamp();
-    let refresh_claims = Claims::new(auth.sub.clone(), refresh_exp);
+    let refresh_claims = Claims::new(auth.user_id.clone(), refresh_exp, auth.user_id.clone());
     let refresh_token = encode(
         &Header::default(),
         &refresh_claims,

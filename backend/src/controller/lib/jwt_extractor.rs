@@ -37,7 +37,13 @@ pub struct AccessTokenDecoded(Claims);
 
 impl From<AccessTokenDecoded> for Auth {
     fn from(v: AccessTokenDecoded) -> Self {
-        Auth::new(v.0.sub)
+        Auth::new(v.0.user_id)
+    }
+}
+
+impl AccessTokenDecoded {
+    pub fn into_auth(self) -> Auth {
+        self.into()
     }
 }
 
@@ -60,7 +66,13 @@ pub struct RefreshTokenDecoded(Claims);
 
 impl From<RefreshTokenDecoded> for Auth {
     fn from(v: RefreshTokenDecoded) -> Self {
-        Auth::new(v.0.sub)
+        Auth::new(v.0.user_id)
+    }
+}
+
+impl RefreshTokenDecoded {
+    pub fn into_auth(self) -> Auth {
+        self.into()
     }
 }
 
