@@ -14,15 +14,20 @@ use derive_new::new;
 use lazy_static::lazy_static;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
+use validator::Validate;
 
 lazy_static! {
-    static ref NAME_REGEX: Regex = Regex::new(r"[A-Za-z\d#$@!%&*?]{3,15}").unwrap();
-    static ref PASSWORD_REGEX: Regex = Regex::new(r"[A-Za-z\d#$@!%&*?]{8,30}").unwrap();
+    static ref RE_NAME: Regex = Regex::new(r"[A-Za-z\d#$@!%&*?]{3,15}").unwrap();
+    static ref RE_PASSWORD: Regex = Regex::new(r"[A-Za-z\d#$@!%&*?]{8,30}").unwrap();
 }
 
-#[derive(new, Debug, Serialize, Deserialize)]
+#[derive(new, Debug, Serialize, Deserialize, Validate)]
 pub struct User {
     pub id: String,
+    #[validate(regex(
+        path = "RE_NAME",
+        message = "name must be at least 3 and no more than 15 characters in alphabet, numbers or symbols"
+    ))]
     pub name: String,
     pub password_hash: String,
     pub refresh_token_hash: Option<String>,
@@ -32,10 +37,7 @@ pub struct User {
 
 impl User {
     pub fn create(name: String, password: String) -> anyhow::Result<Self> {
-        if !NAME_REGEX.is_match(&name) {
-            anyhow::bail!("name must be at least 3 and no more than 15 characters in alphabet, numbers or symbols")
-        }
-        if !PASSWORD_REGEX.is_match(&password) {
+        if !RE_PASSWORD.is_match(&password) {
             anyhow::bail!("password must be at least 8 and no more than 30 characters in alphabet, numbers or symbols")
         }
 
@@ -43,6 +45,8 @@ impl User {
         let now = get_current_date_time();
 
         let user = User::new(id, name, hash(&password), None, now, now);
+        user.validate()?;
+
         Ok(user)
     }
 
@@ -68,7 +72,7 @@ impl User {
         let refresh_token_hash = self
             .refresh_token_hash
             .as_ref()
-            .ok_or_else(|| anyhow::anyhow!("refresh_token_hash must not be empty"))?;
+            .ok_or_else(|| anyhow::anyhow!("refresh_token_hash is empty"))?;
 
         verify(&refresh_token, refresh_token_hash)
     }

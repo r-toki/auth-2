@@ -8,7 +8,7 @@ use std::future::Future;
 use std::pin::Pin;
 
 lazy_static! {
-    static ref BEARER_REGEX: Regex = Regex::new(r"^Bearer\s(.*)$").unwrap();
+    static ref RE_BEARER: Regex = Regex::new(r"^Bearer\s(.*)$").unwrap();
 }
 
 pub struct BearerToken(String);
@@ -84,7 +84,7 @@ fn extract_bearer_token(req: &actix_web::HttpRequest) -> anyhow::Result<String> 
         .get(header::AUTHORIZATION)
         .and_then(|v| v.to_str().ok())
         .and_then(|authorization| {
-            BEARER_REGEX
+            RE_BEARER
                 .captures(authorization)
                 .and_then(|captures| captures.get(1))
         })
