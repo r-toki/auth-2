@@ -29,7 +29,7 @@ const useAuthProvider = (): State => {
   };
 
   const signUp = async (name: string, password: string) => {
-    const { data } = await axios.post<Tokens>('users/registrations', { name, password });
+    const { data } = await axios.post<Tokens>('users', { name, password });
 
     storage.set('access_token', data.accessToken);
     storage.set('refresh_token', data.refreshToken);

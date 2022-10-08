@@ -4,7 +4,7 @@ import { WithChildren } from '../types';
 
 export const Layout = ({ children }: WithChildren) => {
   return (
-    <Box h="full" py="10" bg="gray.100">
+    <Box h="full" overflow="auto" py="10" bg="gray.100">
       {children}
     </Box>
   );
