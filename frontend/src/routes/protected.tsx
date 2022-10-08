@@ -9,7 +9,7 @@ export const protectedRoutes = [
     path: '/app',
     element: <App />,
     children: [
-      { path: '/', element: <Home /> },
+      { path: '', element: <Home /> },
       { path: '*', element: <Navigate to="." /> },
     ],
   },

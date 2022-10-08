@@ -1,10 +1,14 @@
 import { Center, Spinner } from '@chakra-ui/react';
 import { createContext, useContext, useEffect, useState } from 'react';
 
-import { WithChildren } from '@/types';
+import { WithChildren } from '@/components/types';
+import { Tokens } from '@/types';
 import { assertDefined } from '@/utils/assert-defined';
+import { storage } from '@/utils/storage';
 
-type User = { name: string };
+import { axios } from './axios';
+
+type User = { id: string; name: string; createdAt: string; updatedAt: string };
 
 type State = {
   initialized: boolean;
@@ -19,15 +23,45 @@ const useAuthProvider = (): State => {
 
   const [user, setUser] = useState<User>();
 
-  const signUp = async (name: string, password: string) => {};
+  const fetchUser = async () => {
+    const { data } = await axios.get<User>('user');
+    setUser(data);
+  };
 
-  const signIn = async (name: string, password: string) => {};
+  const signUp = async (name: string, password: string) => {
+    const { data } = await axios.post<Tokens>('users/registrations', { name, password });
 
-  const signOut = async () => {};
+    storage.set('access_token', data.accessToken);
+    storage.set('refresh_token', data.refreshToken);
+
+    await fetchUser();
+  };
+
+  const signIn = async (name: string, password: string) => {
+    const { data } = await axios.post<Tokens>('users/sessions', { name, password });
+
+    storage.set('access_token', data.accessToken);
+    storage.set('refresh_token', data.refreshToken);
+
+    await fetchUser();
+  };
+
+  const signOut = async () => {
+    await axios.delete('users/sessions');
+
+    storage.clear('access_token');
+    storage.clear('refresh_token');
+
+    setUser(undefined);
+  };
 
   useEffect(() => {
     (async () => {
-      setInitialized(true);
+      try {
+        await fetchUser();
+      } finally {
+        setInitialized(true);
+      }
     })();
   }, []);
 

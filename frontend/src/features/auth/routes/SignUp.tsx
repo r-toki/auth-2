@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 
 import { Form, InputField } from '@/components/Form';
+import { Layout } from '@/components/Layout';
+import { useAuth } from '@/lib/auth';
 
 const schema = z
   .object({
@@ -19,14 +21,16 @@ const schema = z
   });
 
 export const SignUp = () => {
+  const { signUp } = useAuth();
   const navigate = useNavigate();
 
   const onSubmit = async ({ name, password }: z.infer<typeof schema>) => {
-    console.log(name, password);
+    await signUp(name, password);
+    navigate('/');
   };
 
   return (
-    <Box>
+    <Layout>
       <Center>
         <Stack w="md" mx="4" p="8" borderRadius="md" bg="white">
           <Box alignSelf="center" fontWeight="bold" fontSize="2xl">
@@ -68,6 +72,6 @@ export const SignUp = () => {
           </Box>
         </Stack>
       </Center>
-    </Box>
+    </Layout>
   );
 };
