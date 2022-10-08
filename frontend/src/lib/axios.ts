@@ -27,7 +27,7 @@ axios.interceptors.response.use(undefined, async (err: AxiosError) => {
   if (err.response?.status !== 401) return Promise.reject(err);
 
   const refreshToken = storage.get('refresh_token');
-  if (!refreshToken) return Promise.reject(err);
+  if (!refreshToken || !err.config) return Promise.reject(err);
 
   try {
     const { data } = await Axios.create({
