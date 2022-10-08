@@ -18,16 +18,10 @@ const schema = z
     path: ['confirm'],
   });
 
-type RegisterValue = {
-  name: string;
-  password: string;
-  confirm: string;
-};
-
 export const SignUp = () => {
   const navigate = useNavigate();
 
-  const onSubmit = async ({ name, password }: RegisterValue) => {
+  const onSubmit = async ({ name, password }: z.infer<typeof schema>) => {
     console.log(name, password);
   };
 
@@ -36,10 +30,10 @@ export const SignUp = () => {
       <Center>
         <Stack w="md" mx="4" p="8" borderRadius="md" bg="white">
           <Box alignSelf="center" fontWeight="bold" fontSize="2xl">
-            Vite + React + TS
+            auth-2
           </Box>
 
-          <Form<RegisterValue, typeof schema> onSubmit={onSubmit} schema={schema}>
+          <Form<typeof schema> onSubmit={onSubmit} schema={schema}>
             {({ register, formState: { errors } }) => (
               <Stack spacing="6">
                 <Stack spacing="4">
