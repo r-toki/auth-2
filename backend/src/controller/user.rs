@@ -1,5 +1,4 @@
 use super::lib::{error::Result, jwt_extractor::AccessTokenDecoded};
-use crate::lib::jwt::Auth;
 use crate::model::user::{User, UserDto};
 
 use actix_web::{
@@ -17,7 +16,7 @@ async fn index(
     pool: Data<PgPool>,
     access_token_decoded: AccessTokenDecoded,
 ) -> Result<Json<UserDto>> {
-    let auth: Auth = access_token_decoded.into();
+    let auth = access_token_decoded.into_auth();
     let me = User::find_user(&**pool, auth.user_id).await?;
     Ok(Json(me))
 }

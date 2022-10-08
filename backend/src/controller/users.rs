@@ -2,7 +2,7 @@ use super::lib::{
     error::Result,
     jwt_extractor::{AccessTokenDecoded, BearerToken, RefreshTokenDecoded},
 };
-use crate::lib::jwt::{Auth, Tokens};
+use crate::lib::jwt::Tokens;
 use crate::model::user::User;
 
 use actix_web::{
@@ -54,7 +54,7 @@ async fn update_sessions(
     token: BearerToken,
     refresh_token_decoded: RefreshTokenDecoded,
 ) -> Result<Json<Tokens>> {
-    let auth: Auth = refresh_token_decoded.into();
+    let auth = refresh_token_decoded.into_auth();
     let mut user = User::find_by_id(&**pool, auth.user_id).await?;
     user.verify_refresh_token(token.into())?;
     let tokens = user.issue_tokens();
@@ -67,7 +67,7 @@ async fn delete_sessions(
     pool: Data<PgPool>,
     access_token_decoded: AccessTokenDecoded,
 ) -> Result<Json<()>> {
-    let auth: Auth = access_token_decoded.into();
+    let auth = access_token_decoded.into_auth();
     let mut user = User::find_by_id(&**pool, auth.user_id).await?;
     user.revoke_tokens();
     user.upsert(&**pool).await?;
