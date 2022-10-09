@@ -7,7 +7,7 @@ use derive_new::new;
 use serde::{Deserialize, Serialize};
 
 #[derive(new, Debug, Serialize, Deserialize)]
-struct Attachment {
+pub struct Attachment {
     pub id: String,
     pub record_type: Option<String>,
     pub record_id: Option<String>,

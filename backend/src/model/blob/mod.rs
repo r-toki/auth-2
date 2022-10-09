@@ -7,7 +7,7 @@ use derive_new::new;
 use serde::{Deserialize, Serialize};
 
 #[derive(new, Debug, Serialize, Deserialize)]
-struct Blob {
+pub struct Blob {
     pub id: String,
     pub data: Vec<u8>,
     pub name: String,
@@ -18,10 +18,14 @@ struct Blob {
 }
 
 impl Blob {
-    pub fn create(data: Vec<u8>, name: String, content_type: String, byte_size: i32) -> Self {
+    pub fn create(encoded: String, name: String, content_type: String) -> anyhow::Result<Self> {
         let id = get_new_id();
         let now = get_current_date_time();
 
-        Blob::new(id, data, name, content_type, byte_size, now, now)
+        let decoded = base64::decode(encoded)?;
+        let byte_size: i32 = decoded.len().try_into()?;
+
+        let blob = Blob::new(id, decoded, name, content_type, byte_size, now, now);
+        Ok(blob)
     }
 }
