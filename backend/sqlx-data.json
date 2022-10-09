@@ -50,6 +50,80 @@
     },
     "query": "\nselect * from users\nwhere id = $1\n            "
   },
+  "11c52f43739cdcc39e6cd65e51c361f1c49aa749c56413dd9dc4df5bed953bcf": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Timestamptz",
+          "Timestamptz"
+        ]
+      }
+    },
+    "query": "\ninsert into attachments (id, record_type, record_id, record_name, blob_id, created_at, updated_at)\nvalues ($1, $2, $3, $4, $5, $6, $7)\non conflict (id)\ndo update\nset record_type = $2, record_id = $3, record_name = $4, blob_id = $5, created_at = $6, updated_at = $7\n            "
+  },
+  "5bdd23153f231b6a621147e4900eced16456ee040816053ccffe72d70b4b15f0": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "data",
+          "ordinal": 1,
+          "type_info": "Bytea"
+        },
+        {
+          "name": "name",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "content_type",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "byte_size",
+          "ordinal": 4,
+          "type_info": "Int4"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 5,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 6,
+          "type_info": "Timestamptz"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "\nselect * from blobs\nwhere id = $1\n            "
+  },
   "a621ab4bfb89543a807c27524f7dbd6b3247ab399f78975afb6d7308d3e38632": {
     "describe": {
       "columns": [
@@ -87,6 +161,24 @@
       }
     },
     "query": "\nselect id, name, created_at, updated_at from users\nwhere id = $1\n            "
+  },
+  "d9b5fa0fcd32b173947afb2b36ade9236783388fbff62144a9ce4bf1817b0720": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Bytea",
+          "Text",
+          "Text",
+          "Int4",
+          "Timestamptz",
+          "Timestamptz"
+        ]
+      }
+    },
+    "query": "\ninsert into blobs (id, data, name, content_type, byte_size, created_at, updated_at)\nvalues ($1, $2, $3, $4, $5, $6, $7)\non conflict (id)\ndo update\nset data = $2, name = $3, content_type = $4, byte_size = $5, created_at = $6, updated_at = $7\n            "
   },
   "db13bcbf409269cd74d8c740eb8e4b1bfeb96733186bc36c4f150b0bfa7a98c7": {
     "describe": {
@@ -137,6 +229,64 @@
       }
     },
     "query": "\nselect * from users\nwhere name = $1\n        "
+  },
+  "f22b5f873d3500b1793d5fbd2c47300d009fe5a5c9f0b125a0482bd3e88c75e9": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "record_type",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "record_id",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "record_name",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "blob_id",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 5,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 6,
+          "type_info": "Timestamptz"
+        }
+      ],
+      "nullable": [
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Text"
+        ]
+      }
+    },
+    "query": "\nselect * from attachments\nwhere record_type = $1 and record_id = $2 and record_name = $3\n            "
   },
   "ffd6694d907baad8310735b5304cc35627f8fb75056365d9293b6fd7f79564bd": {
     "describe": {
