@@ -5,29 +5,22 @@ import { storage } from '@/utils/storage';
 
 const baseURL = import.meta.env.VITE_APP_BACKEND_URL;
 
-export const axios = Axios.create({
-  baseURL,
-  headers: {
+export const axios = Axios.create({ baseURL });
+
+// NOTE: retry 時の config.headers が壊れるので再定義する
+axios.interceptors.request.use((config) => {
+  const accessToken = storage.get('access_token');
+  config.headers = {
     Accept: 'application/json',
     'Content-Type': 'application/json',
-  },
-});
-
-axios.interceptors.request.use((config) => {
-  if (!config.headers) return config;
-
-  const accessToken = storage.get('access_token');
-  if (accessToken) {
-    config.headers['Authorization'] = `Bearer ${accessToken}`;
-  }
+    Authorization: accessToken ? `Bearer ${accessToken}` : undefined,
+  };
   return config;
 });
 
 axios.interceptors.response.use(undefined, async (err: AxiosError) => {
-  if (err.response?.status !== 401) return Promise.reject(err);
-
   const refreshToken = storage.get('refresh_token');
-  if (!refreshToken || !err.config) return Promise.reject(err);
+  if (!err.config || err.response?.status !== 401 || !refreshToken) return Promise.reject(err);
 
   try {
     const { data } = await Axios.create({
@@ -37,7 +30,7 @@ axios.interceptors.response.use(undefined, async (err: AxiosError) => {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${refreshToken}`,
       },
-    }).put<Tokens>('users/sessions');
+    }).patch<Tokens>('users/sessions');
 
     storage.set('access_token', data.accessToken);
     storage.set('refresh_token', data.refreshToken);

@@ -20,7 +20,6 @@ type State = {
 
 const useAuthProvider = (): State => {
   const [initialized, setInitialized] = useState(false);
-
   const [user, setUser] = useState<User>();
 
   const fetchUser = async () => {

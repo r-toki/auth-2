@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 
 import { SignIn, SignUp } from '@/features/auth';
 
@@ -13,5 +13,9 @@ export const publicRoutes = [
   {
     path: '/auth/*',
     element: <AuthRoutes />,
+  },
+  {
+    path: '*',
+    element: <Navigate to="/auth/sign-in" />,
   },
 ];

@@ -1,4 +1,4 @@
-const storagePrefix = 'twitter_clone_1_';
+const storagePrefix = 'auth_2_';
 
 type Key = 'access_token' | 'refresh_token';
 
