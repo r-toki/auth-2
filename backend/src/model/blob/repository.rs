@@ -3,7 +3,10 @@ use super::Blob;
 use sqlx::{query, query_as, PgExecutor};
 
 impl Blob {
-    pub async fn find_by_id(executor: impl PgExecutor<'_>, id: String) -> anyhow::Result<Blob> {
+    pub async fn find_by_id(
+        executor: impl PgExecutor<'_>,
+        id: String,
+    ) -> anyhow::Result<Option<Blob>> {
         query_as!(
             Blob,
             r#"
@@ -12,7 +15,7 @@ where id = $1
             "#,
             id
         )
-        .fetch_one(executor)
+        .fetch_optional(executor)
         .await
         .map_err(Into::into)
     }
@@ -33,6 +36,20 @@ set data = $2, name = $3, content_type = $4, byte_size = $5, created_at = $6, up
             self.byte_size,
             self.created_at,
             self.updated_at
+        )
+        .execute(executor)
+        .await
+        .map(|_| ())
+        .map_err(Into::into)
+    }
+
+    pub async fn delete(&self, executor: impl PgExecutor<'_>) -> anyhow::Result<()> {
+        query!(
+            r#"
+delete from blobs
+where id = $1
+            "#,
+            self.id
         )
         .execute(executor)
         .await

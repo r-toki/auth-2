@@ -1,5 +1,17 @@
 {
   "db": "PostgreSQL",
+  "00ff3a33de9c1cbb9df2f7c76182554cf950ad8b08c51fd4847746c5eaa6eaf9": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "\ndelete from blobs\nwhere id = $1\n            "
+  },
   "0c84ea19c54ab9dcede42295e9b698be6b929cdcfd84afdbb99b386ce6c6994c": {
     "describe": {
       "columns": [

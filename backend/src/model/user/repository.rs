@@ -3,7 +3,10 @@ use super::User;
 use sqlx::{query, query_as, PgExecutor};
 
 impl User {
-    pub async fn find_by_id(executor: impl PgExecutor<'_>, id: String) -> anyhow::Result<User> {
+    pub async fn find_by_id(
+        executor: impl PgExecutor<'_>,
+        id: String,
+    ) -> anyhow::Result<Option<User>> {
         query_as!(
             User,
             r#"
@@ -12,12 +15,15 @@ where id = $1
             "#,
             id
         )
-        .fetch_one(executor)
+        .fetch_optional(executor)
         .await
         .map_err(Into::into)
     }
 
-    pub async fn find_by_name(executor: impl PgExecutor<'_>, name: String) -> anyhow::Result<User> {
+    pub async fn find_by_name(
+        executor: impl PgExecutor<'_>,
+        name: String,
+    ) -> anyhow::Result<Option<User>> {
         query_as!(
             User,
             r#"
@@ -26,7 +32,7 @@ where name = $1
         "#,
             name
         )
-        .fetch_one(executor)
+        .fetch_optional(executor)
         .await
         .map_err(Into::into)
     }

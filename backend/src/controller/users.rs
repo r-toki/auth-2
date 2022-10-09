@@ -41,7 +41,9 @@ struct CreateSessions {
 
 #[post("/users/sessions")]
 async fn create_sessions(pool: Data<PgPool>, form: Json<CreateSessions>) -> Result<Json<Tokens>> {
-    let mut user = User::find_by_name(&**pool, form.name.clone()).await?;
+    let mut user = User::find_by_name(&**pool, form.name.clone())
+        .await?
+        .ok_or_else(|| anyhow::anyhow!("not found"))?;
     user.verify_password(form.password.clone())?;
     let tokens = user.issue_tokens();
     user.upsert(&**pool).await?;
@@ -55,7 +57,9 @@ async fn update_sessions(
     refresh_token_decoded: RefreshTokenDecoded,
 ) -> Result<Json<Tokens>> {
     let auth = refresh_token_decoded.into_auth();
-    let mut user = User::find_by_id(&**pool, auth.user_id).await?;
+    let mut user = User::find_by_id(&**pool, auth.user_id)
+        .await?
+        .ok_or_else(|| anyhow::anyhow!("not found"))?;
     user.verify_refresh_token(token.into())?;
     let tokens = user.issue_tokens();
     user.upsert(&**pool).await?;
@@ -68,7 +72,9 @@ async fn delete_sessions(
     access_token_decoded: AccessTokenDecoded,
 ) -> Result<Json<()>> {
     let auth = access_token_decoded.into_auth();
-    let mut user = User::find_by_id(&**pool, auth.user_id).await?;
+    let mut user = User::find_by_id(&**pool, auth.user_id)
+        .await?
+        .ok_or_else(|| anyhow::anyhow!("not found"))?;
     user.revoke_tokens();
     user.upsert(&**pool).await?;
     Ok(Json(()))
